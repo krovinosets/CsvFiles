@@ -177,36 +177,41 @@ void MainWindow::draw(FuncReturningValue*frv)
         ++id;
     }
     id = 1;
-    for(double i = 20; i <= spectrHeight-20; i += mY){ // рисуем черточки на координатой оси
+    for(double i = t ? 20 : spectrHeight-20; t ? i <= spectrHeight-20 : i >= 20; t ? i += mY : i -=mY){ // рисуем черточки на координатой оси
         p.setPen(QPen(Qt::black,3));
         p.drawPoint(50, i);
         p.setPen(QPen(Qt::black,1));
-        p.drawText(QPoint(4,i), QString::number(vec[vec.size() - id]));
+        p.drawText(QPoint(4,i), QString::number(vec[ t ? vec.size() - id : (id-1)]));
         ++id;
     }
     int y;
     int ind = 0;
-    int prevX = 0, prevY = 0;
+    int prevX = -999, prevY = -999;
     for (int x = 50 + mX; x <= spectrWidth; x += mX)
     {
         for(size_t i = 0; i < vec.size(); i++){
-            if(nums[i] != QString("deleted") && vec[i] == nums[ind].toDouble()){
+            if(std::fabs(vec[i] - nums[ind].toDouble()) < 0.01){
+                if(nums[ind] == QString("deleted")){
+                    ++ind;
+                    break;
+                }
                 if(t)
                     y = (mY*(vec.size() - i + 2));
                 else
                     y = y_start - (mY*(i+1));
-                nums[i] = "deleted";
+                nums[ind] = "deleted";
+                if(prevX != -999){
+                    p.setPen(QPen(Qt::green,1));
+                    p.drawLine(prevX, prevY, x, y);
+                }
+                p.setPen(QPen(Qt::red,4));
+                qDebug() << "X: " << x << " Y: " << y;
+                p.drawPoint(x, y);
+                prevX = x, prevY = y;
+                ++ind;
                 break;
             }
         }
-        if(prevX != 0){
-            p.setPen(QPen(Qt::green,1));
-            p.drawLine(prevX, prevY, x, y);
-        }
-        p.setPen(QPen(Qt::red,4));
-        p.drawPoint(x, y);
-        prevX = x, prevY = y;
-        ++ind;
     }
     ui->lbl_graphic->setPixmap(spectrPixmap);
 }
